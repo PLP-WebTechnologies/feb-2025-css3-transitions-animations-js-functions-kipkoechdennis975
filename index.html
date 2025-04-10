@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Animations with Storage</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+            transition: background-color 0.5s ease;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 30px;
+        }
+
+        /* Animated button */
+        .action-btn {
+            padding: 12px 24px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        .action-btn:hover {
+            background-color: #45a049;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+
+        .action-btn:active {
+            transform: translateY(0);
+        }
+
+        /* Animated box */
+        .animated-box {
+            width: 150px;
+            height: 150px;
+            background-color: #3498db;
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-weight: bold;
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+        }
+
+        /* Keyframe animation */
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .spin-animation {
+            animation: spin 1s linear infinite;
+        }
+
+        /* Theme toggle */
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 8px 16px;
+            background-color: #333;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        /* Dark theme */
+        body.dark-theme {
+            background-color: #222;
+            color: #f0f0f0;
+        }
+
+        body.dark-theme .animated-box {
+            background-color: #9b59b6;
+        }
+
+        /* Preferences panel */
+        .preferences {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        body.dark-theme .preferences {
+            background-color: #333;
+        }
+
+        .preferences label {
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        .preferences select, .preferences input {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+
+        body.dark-theme .preferences select, 
+        body.dark-theme .preferences input {
+            background-color: #444;
+            color: white;
+            border-color: #555;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Interactive Animations Demo</h1>
+        
+        <div class="preferences">
+            <h2>Your Preferences</h2>
+            <label>
+                Favorite Animation:
+                <select id="animation-select">
+                    <option value="bounce">Bounce</option>
+                    <option value="spin">Spin</option>
+                    <option value="grow">Grow</option>
+                    <option value="color-change">Color Change</option>
+                </select>
+            </label>
+            
+            <label>
+                Animation Speed:
+                <input type="range" id="speed-slider" min="0.1" max="2" step="0.1" value="1">
+                <span id="speed-value">1x</span>
+            </label>
+            
+            <button class="action-btn" id="apply-btn">Apply Animation</button>
+        </div>
+        
+        <div class="animated-box" id="animation-target">
+            Animate Me!
+        </div>
+        
+        <button class="action-btn" id="reset-btn">Reset Animation</button>
+    </div>
+    
+    <button class="theme-toggle" id="theme-toggle">Toggle Dark Mode</button>
+    
+    <script>
+        // DOM Elements
+        const animationTarget = document.getElementById('animation-target');
+        const applyBtn = document.getElementById('apply-btn');
+        const resetBtn = document.getElementById('reset-btn');
+        const animationSelect = document.getElementById('animation-select');
+        const speedSlider = document.getElementById('speed-slider');
+        const speedValue = document.getElementById('speed-value');
+        const themeToggle = document.getElementById('theme-toggle');
+        const body = document.body;
+
+        // Load saved preferences
+        function loadPreferences() {
+            // Theme preference
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark') {
+                body.classList.add('dark-theme');
+            }
+
+            // Animation preference
+            const savedAnimation = localStorage.getItem('animation');
+            if (savedAnimation) {
+                animationSelect.value = savedAnimation;
+            }
+
+            // Speed preference
+            const savedSpeed = localStorage.getItem('animationSpeed');
+            if (savedSpeed) {
+                speedSlider.value = savedSpeed;
+                speedValue.textContent = `${savedSpeed}x`;
+            }
+        }
+
+        // Save preferences to localStorage
+        function savePreferences() {
+            // Save theme
+            localStorage.setItem('theme', body.classList.contains('dark-theme') ? 'dark' : 'light');
+
+            // Save animation
+            localStorage.setItem('animation', animationSelect.value);
+
+            // Save speed
+            localStorage.setItem('animationSpeed', speedSlider.value);
+        }
+
+        // Apply selected animation
+        function applyAnimation() {
+            // Reset any existing animations
+            resetAnimation();
+
+            // Get selected values
+            const animationType = animationSelect.value;
+            const speed = speedSlider.value;
+
+            // Apply animation based on selection
+            switch(animationType) {
+                case 'bounce':
+                    animationTarget.style.animation = `bounce ${1/speed}s ease infinite alternate`;
+                    break;
+                case 'spin':
+                    animationTarget.classList.add('spin-animation');
+                    animationTarget.style.animationDuration = `${1/speed}s`;
+                    break;
+                case 'grow':
+                    animationTarget.style.animation = `grow ${1/speed}s ease infinite alternate`;
+                    break;
+                case 'color-change':
+                    animationTarget.style.animation = `color-change ${1/speed}s ease infinite alternate`;
+                    break;
+            }
+
+            // Save preferences
+            savePreferences();
+        }
+
+        // Reset animation
+        function resetAnimation() {
+            animationTarget.style.animation = '';
+            animationTarget.classList.remove('spin-animation');
+        }
+
+        // Toggle dark theme
+        function toggleTheme() {
+            body.classList.toggle('dark-theme');
+            savePreferences();
+        }
+
+        // Update speed display
+        function updateSpeedDisplay() {
+            speedValue.textContent = `${speedSlider.value}x`;
+        }
+
+        // Event Listeners
+        applyBtn.addEventListener('click', applyAnimation);
+        resetBtn.addEventListener('click', resetAnimation);
+        themeToggle.addEventListener('click', toggleTheme);
+        speedSlider.addEventListener('input', updateSpeedDisplay);
+
+        // Keyframe animations (added dynamically)
+        const styleSheet = document.styleSheets[0];
+        styleSheet.insertRule(`
+            @keyframes bounce {
+                0% { transform: translateY(0); }
+                100% { transform: translateY(-20px); }
+            }
+        `, styleSheet.cssRules.length);
+
+        styleSheet.insertRule(`
+            @keyframes grow {
+                0% { transform: scale(1); }
+                100% { transform: scale(1.2); }
+            }
+        `, styleSheet.cssRules.length);
+
+        styleSheet.insertRule(`
+            @keyframes color-change {
+                0% { background-color: #3498db; }
+                50% { background-color: #e74c3c; }
+                100% { background-color: #3498db; }
+            }
+        `, styleSheet.cssRules.length);
+
+        // Initialize
+        loadPreferences();
+    </script>
+</body>
+</html>
